@@ -1,3 +1,3 @@
-module github.com/SurkovVS/werr
+module github.com/surkovvs/werr
 
 go 1.19
