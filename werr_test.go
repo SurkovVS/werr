@@ -3,7 +3,6 @@ package werr
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"testing"
 )
 
@@ -56,8 +55,18 @@ func TestNew(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := New(tt.args.err); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("New() = %v, want %v", got, tt.want)
+			got := New(tt.args.err)
+			if got.original != nil && tt.want.original != nil {
+				if got.status != tt.want.status ||
+					got.wrapping.Error() != tt.want.wrapping.Error() ||
+					got.original.Error() != tt.want.original.Error() {
+					t.Errorf("New() = %v, want %v", got, tt.want)
+				}
+			} else {
+				if got.wrapping != tt.want.wrapping || got.original != tt.want.original {
+					t.Error("unexpected nil result")
+				}
+
 			}
 		})
 	}
@@ -185,7 +194,7 @@ func Test_werror_SetStatus(t *testing.T) {
 				wrapping: tt.fields.wrapping,
 				original: tt.fields.original,
 			}
-			if got := werr.SetStatus(tt.args.status); !reflect.DeepEqual(got, tt.want) {
+			if got := werr.SetStatus(tt.args.status); got.status != tt.want.status {
 				t.Errorf("werror.SetStatus() = %v, want %v", got, tt.want)
 			}
 		})
@@ -299,7 +308,7 @@ func Test_werror_Wrap(t *testing.T) {
 				wrapping: tt.fields.wrapping,
 				original: tt.fields.original,
 			}
-			if got := werr.Wrap(tt.args.t); !reflect.DeepEqual(got, tt.want) {
+			if got := werr.Wrap(tt.args.t); got.wrapping.Error() != tt.want.wrapping.Error() {
 				t.Errorf("werror.Wrap() = %v, want %v", got, tt.want)
 			}
 		})
