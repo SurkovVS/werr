@@ -14,9 +14,8 @@ var AsMutch = func() **werror {
 
 type (
 	werror struct {
-		status   int
-		wrapping error
-		original error
+		status int
+		err    error
 	}
 )
 
@@ -26,15 +25,15 @@ func New(err error) *werror {
 	if ok {
 		return werr
 	}
-	return &werror{wrapping: err, original: err}
+	return &werror{err: err}
 }
 
 // Error implemetation
 func (werr *werror) Error() string {
 	if text := http.StatusText(werr.status); text != "" {
-		return fmt.Sprintf("(werr status - %d %s) ", werr.status, text) + werr.wrapping.Error()
+		return fmt.Sprintf("(werr status - %d %s) ", werr.status, text) + werr.err.Error()
 	}
-	return werr.wrapping.Error()
+	return werr.err.Error()
 }
 
 // Set HTTP status code
@@ -50,16 +49,11 @@ func (werr *werror) Status() int {
 
 // Wrap error with text as <text>: <current werror>
 func (werr *werror) Wrap(t string) *werror {
-	werr.wrapping = fmt.Errorf("%s: %w", t, werr.wrapping)
+	werr.err = fmt.Errorf("%s: %w", t, werr.err)
 	return werr
 }
 
 // Return unwrapped error
 func (werr *werror) Unwrap() error {
-	return errors.Unwrap(werr.wrapping)
-}
-
-// Return original error (from initialization of current structure)
-func (werr *werror) Original() error {
-	return werr.original
+	return errors.Unwrap(werr.err)
 }

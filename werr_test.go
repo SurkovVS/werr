@@ -21,24 +21,21 @@ func TestNew(t *testing.T) {
 				err: errors.New("test"),
 			},
 			want: &werror{
-				status:   0,
-				wrapping: errors.New("test"),
-				original: errors.New("test"),
+				status: 0,
+				err:    errors.New("test"),
 			},
 		},
 		{
 			name: "existing werr",
 			args: args{
 				err: &werror{
-					status:   99,
-					wrapping: errors.New("test"),
-					original: errors.New("test"),
+					status: 99,
+					err:    errors.New("test"),
 				},
 			},
 			want: &werror{
-				status:   99,
-				wrapping: errors.New("test"),
-				original: errors.New("test"),
+				status: 99,
+				err:    errors.New("test"),
 			},
 		},
 		{
@@ -47,23 +44,21 @@ func TestNew(t *testing.T) {
 				err: nil,
 			},
 			want: &werror{
-				status:   0,
-				wrapping: nil,
-				original: nil,
+				status: 0,
+				err:    nil,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := New(tt.args.err)
-			if got.original != nil && tt.want.original != nil {
+			if got.err != nil && tt.want.err != nil {
 				if got.status != tt.want.status ||
-					got.wrapping.Error() != tt.want.wrapping.Error() ||
-					got.original.Error() != tt.want.original.Error() {
+					got.err.Error() != tt.want.err.Error() {
 					t.Errorf("New() = %v, want %v", got, tt.want)
 				}
 			} else {
-				if got.wrapping != tt.want.wrapping || got.original != tt.want.original {
+				if got.err != tt.want.err {
 					t.Error("unexpected nil result")
 				}
 
@@ -75,7 +70,7 @@ func TestNew(t *testing.T) {
 func Test_werror_Error(t *testing.T) {
 	type fields struct {
 		status   int
-		wrapping error
+		err      error
 		original error
 	}
 	tests := []struct {
@@ -88,7 +83,7 @@ func Test_werror_Error(t *testing.T) {
 			name: "filled",
 			fields: fields{
 				status:   0,
-				wrapping: fmt.Errorf("paper: %w", errors.New("rock")),
+				err:      fmt.Errorf("paper: %w", errors.New("rock")),
 				original: nil,
 			},
 			want: fmt.Errorf("paper: %w", errors.New("rock")).Error(),
@@ -102,7 +97,7 @@ func Test_werror_Error(t *testing.T) {
 			name: "filled with status",
 			fields: fields{
 				status:   200,
-				wrapping: fmt.Errorf("paper: %w", errors.New("rock")),
+				err:      fmt.Errorf("paper: %w", errors.New("rock")),
 				original: nil,
 			},
 			want: fmt.Errorf("(werr status - 200 OK) paper: %w", errors.New("rock")).Error(),
@@ -116,7 +111,7 @@ func Test_werror_Error(t *testing.T) {
 			name: "empty",
 			fields: fields{
 				status:   0,
-				wrapping: nil,
+				err:      nil,
 				original: nil,
 			},
 			want: errors.New("").Error(),
@@ -130,9 +125,8 @@ func Test_werror_Error(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			werr := &werror{
-				status:   tt.fields.status,
-				wrapping: tt.fields.wrapping,
-				original: tt.fields.original,
+				status: tt.fields.status,
+				err:    tt.fields.err,
 			}
 			defer tt.recF()
 			if got := werr.Error(); got != tt.want {
@@ -145,7 +139,7 @@ func Test_werror_Error(t *testing.T) {
 func Test_werror_SetStatus(t *testing.T) {
 	type fields struct {
 		status   int
-		wrapping error
+		err      error
 		original error
 	}
 	type args struct {
@@ -164,9 +158,8 @@ func Test_werror_SetStatus(t *testing.T) {
 				status: 100,
 			},
 			want: &werror{
-				status:   100,
-				wrapping: nil,
-				original: nil,
+				status: 100,
+				err:    nil,
 			},
 		},
 		{
@@ -174,25 +167,23 @@ func Test_werror_SetStatus(t *testing.T) {
 			name: "filled",
 			fields: fields{
 				status:   200,
-				wrapping: errors.New("test"),
+				err:      errors.New("test"),
 				original: errors.New("test"),
 			},
 			args: args{
 				status: 100,
 			},
 			want: &werror{
-				status:   100,
-				wrapping: errors.New("test"),
-				original: errors.New("test"),
+				status: 100,
+				err:    errors.New("test"),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			werr := &werror{
-				status:   tt.fields.status,
-				wrapping: tt.fields.wrapping,
-				original: tt.fields.original,
+				status: tt.fields.status,
+				err:    tt.fields.err,
 			}
 			if got := werr.SetStatus(tt.args.status); got.status != tt.want.status {
 				t.Errorf("werror.SetStatus() = %v, want %v", got, tt.want)
@@ -204,7 +195,7 @@ func Test_werror_SetStatus(t *testing.T) {
 func Test_werror_Status(t *testing.T) {
 	type fields struct {
 		status   int
-		wrapping error
+		err      error
 		original error
 	}
 	tests := []struct {
@@ -221,7 +212,7 @@ func Test_werror_Status(t *testing.T) {
 			name: "filled",
 			fields: fields{
 				status:   100,
-				wrapping: errors.New("test"),
+				err:      errors.New("test"),
 				original: errors.New("test"),
 			},
 			want: 100,
@@ -230,9 +221,8 @@ func Test_werror_Status(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			werr := &werror{
-				status:   tt.fields.status,
-				wrapping: tt.fields.wrapping,
-				original: tt.fields.original,
+				status: tt.fields.status,
+				err:    tt.fields.err,
 			}
 			if got := werr.Status(); got != tt.want {
 				t.Errorf("werror.Status() = %v, want %v", got, tt.want)
@@ -244,7 +234,7 @@ func Test_werror_Status(t *testing.T) {
 func Test_werror_Wrap(t *testing.T) {
 	type fields struct {
 		status   int
-		wrapping error
+		err      error
 		original error
 	}
 	type args struct {
@@ -260,16 +250,15 @@ func Test_werror_Wrap(t *testing.T) {
 			name: "filled",
 			fields: fields{
 				status:   0,
-				wrapping: errors.New("test"),
+				err:      errors.New("test"),
 				original: nil,
 			},
 			args: args{
 				t: "paper",
 			},
 			want: &werror{
-				status:   0,
-				wrapping: fmt.Errorf("%s: %w", "paper", errors.New("test")),
-				original: nil,
+				status: 0,
+				err:    fmt.Errorf("%s: %w", "paper", errors.New("test")),
 			},
 		},
 		{
@@ -279,36 +268,33 @@ func Test_werror_Wrap(t *testing.T) {
 				t: "paper",
 			},
 			want: &werror{
-				status:   0,
-				wrapping: fmt.Errorf("paper: %w", nil),
-				original: nil,
+				status: 0,
+				err:    fmt.Errorf("paper: %w", nil),
 			},
 		},
 		{
 			name: "empty text",
 			fields: fields{
 				status:   0,
-				wrapping: errors.New("test"),
+				err:      errors.New("test"),
 				original: nil,
 			},
 			args: args{
 				t: "",
 			},
 			want: &werror{
-				status:   0,
-				wrapping: fmt.Errorf(": %w", errors.New("test")),
-				original: nil,
+				status: 0,
+				err:    fmt.Errorf(": %w", errors.New("test")),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			werr := &werror{
-				status:   tt.fields.status,
-				wrapping: tt.fields.wrapping,
-				original: tt.fields.original,
+				status: tt.fields.status,
+				err:    tt.fields.err,
 			}
-			if got := werr.Wrap(tt.args.t); got.wrapping.Error() != tt.want.wrapping.Error() {
+			if got := werr.Wrap(tt.args.t); got.err.Error() != tt.want.err.Error() {
 				t.Errorf("werror.Wrap() = %v, want %v", got, tt.want)
 			}
 		})
@@ -318,7 +304,7 @@ func Test_werror_Wrap(t *testing.T) {
 func Test_werror_Unwrap(t *testing.T) {
 	type fields struct {
 		status   int
-		wrapping error
+		err      error
 		original error
 	}
 	tests := []struct {
@@ -330,7 +316,7 @@ func Test_werror_Unwrap(t *testing.T) {
 			name: "simple",
 			fields: fields{
 				status:   0,
-				wrapping: fmt.Errorf("%s: %w", "paper", errors.New("test")),
+				err:      fmt.Errorf("%s: %w", "paper", errors.New("test")),
 				original: nil,
 			},
 			want: errors.New("test"),
@@ -339,22 +325,20 @@ func Test_werror_Unwrap(t *testing.T) {
 			name: "wrap werr",
 			fields: fields{
 				status:   0,
-				wrapping: fmt.Errorf("%s: %w", "paper", New(errors.New("test"))),
+				err:      fmt.Errorf("%s: %w", "paper", New(errors.New("test"))),
 				original: nil,
 			},
 			want: &werror{
-				status:   0,
-				wrapping: errors.New("test"),
-				original: nil,
+				status: 0,
+				err:    errors.New("test"),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			werr := &werror{
-				status:   tt.fields.status,
-				wrapping: tt.fields.wrapping,
-				original: tt.fields.original,
+				status: tt.fields.status,
+				err:    tt.fields.err,
 			}
 			got := werr.Unwrap()
 			// if !ok {
@@ -362,44 +346,6 @@ func Test_werror_Unwrap(t *testing.T) {
 			// }
 			if got.Error() != tt.want.Error() {
 				t.Errorf("werror.Wrap() = %v, want %v", got.Error(), tt.want.Error())
-			}
-		})
-	}
-}
-
-func Test_werror_Original(t *testing.T) {
-	type fields struct {
-		status   int
-		wrapping error
-		original error
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		{
-			name: "filled",
-			fields: fields{
-				original: errors.New("test"),
-			},
-			wantErr: true,
-		},
-		{
-			name:    "empty",
-			fields:  fields{},
-			wantErr: false,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			werr := &werror{
-				status:   tt.fields.status,
-				wrapping: tt.fields.wrapping,
-				original: tt.fields.original,
-			}
-			if err := werr.Original(); (err != nil) != tt.wantErr {
-				t.Errorf("werror.Original() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
